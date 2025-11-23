@@ -8,16 +8,27 @@ import { motion } from 'framer-motion';
 export default function TamagochiPage() {
     const {
         localStream,
-        remoteStream,
+        remoteStreams,
         isStreaming,
-        currentStreamer,
+        streamers,
         startStreaming,
         stopStreaming,
         error,
     } = useWebRTC();
 
-    // 표시할 스트림 결정: 내가 스트리밍 중이면 내 스트림, 아니면 원격 스트림
-    const displayStream = isStreaming ? localStream : remoteStream;
+    // 전체 스트림 모음 (내 스트림 + 원격 스트림들)
+    const allStreams: Array<{ id: string; stream: MediaStream; isLocal: boolean }> = [];
+
+    if (isStreaming && localStream) {
+        allStreams.push({ id: 'local', stream: localStream, isLocal: true });
+    }
+
+    remoteStreams.forEach((stream, userId) => {
+        allStreams.push({ id: userId, stream, isLocal: false });
+    });
+
+    const hasStreams = allStreams.length > 0;
+    const isSplitScreen = allStreams.length === 2;
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-[hsl(var(--background))] via-[hsl(220,20%,12%)] to-[hsl(280,100%,10%)] relative overflow-hidden">
@@ -36,10 +47,10 @@ export default function TamagochiPage() {
                 >
                     <h1 className="text-3xl font-bold gradient-text">Tamagochi Cam</h1>
                     <div className="glass-effect px-4 py-2 rounded-full text-sm">
-                        {currentStreamer ? (
+                        {streamers.length > 0 ? (
                             <span className="flex items-center gap-2">
                                 <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-                                <span className="text-foreground/80">스트리밍 중</span>
+                                <span className="text-foreground/80">{streamers.length}명 스트리밍 중</span>
                             </span>
                         ) : (
                             <span className="text-muted-foreground">대기 중</span>
@@ -54,8 +65,27 @@ export default function TamagochiPage() {
                     transition={{ delay: 0.1 }}
                     className="flex-1 flex items-center justify-center min-h-0"
                 >
-                    <div className="w-full max-w-5xl max-h-[70vh] aspect-video">
-                        <VideoDisplay stream={displayStream} isLocal={isStreaming} />
+                    <div className="w-full h-full max-w-6xl max-h-[calc(100vh-280px)] flex items-center justify-center">
+                        {!hasStreams ? (
+                            <VideoDisplay stream={null} isLocal={false} />
+                        ) : isSplitScreen ? (
+                            // 2명일 때: 화면 분할
+                            <div className="w-full h-full grid grid-cols-1 md:grid-cols-2 gap-4">
+                                {allStreams.map(({ id, stream, isLocal }) => (
+                                    <div key={id} className="w-full h-full">
+                                        <VideoDisplay stream={stream} isLocal={isLocal} />
+                                    </div>
+                                ))}
+                            </div>
+                        ) : (
+                            // 1명일 때: 전체 화면
+                            <div className="w-full h-full">
+                                <VideoDisplay
+                                    stream={allStreams[0].stream}
+                                    isLocal={allStreams[0].isLocal}
+                                />
+                            </div>
+                        )}
                     </div>
                 </motion.div>
 
@@ -80,7 +110,18 @@ export default function TamagochiPage() {
                         isStreaming={isStreaming}
                         onStartStreaming={startStreaming}
                         onStopStreaming={stopStreaming}
+                        disabled={streamers.length >= 2 && !isStreaming}
                     />
+                </motion.div>
+
+                {/* 인포 */}
+                <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: 0.3 }}
+                    className="text-center text-sm text-muted-foreground"
+                >
+                    <p>Maximum 2 people can stream simultaneously 📹</p>
                 </motion.div>
             </div>
         </div>

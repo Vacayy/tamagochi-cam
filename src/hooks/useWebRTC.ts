@@ -6,9 +6,9 @@ import SimplePeer from 'simple-peer';
 
 interface UseWebRTCReturn {
     localStream: MediaStream | null;
-    remoteStream: MediaStream | null;
+    remoteStreams: Map<string, MediaStream>;
     isStreaming: boolean;
-    currentStreamer: string | null;
+    streamers: string[];
     startStreaming: () => Promise<void>;
     stopStreaming: () => void;
     error: string | null;
@@ -16,9 +16,9 @@ interface UseWebRTCReturn {
 
 export function useWebRTC(): UseWebRTCReturn {
     const [localStream, setLocalStream] = useState<MediaStream | null>(null);
-    const [remoteStream, setRemoteStream] = useState<MediaStream | null>(null);
+    const [remoteStreams, setRemoteStreams] = useState<Map<string, MediaStream>>(new Map());
     const [isStreaming, setIsStreaming] = useState(false);
-    const [currentStreamer, setCurrentStreamer] = useState<string | null>(null);
+    const [streamers, setStreamers] = useState<string[]>([]);
     const [error, setError] = useState<string | null>(null);
 
     const socketRef = useRef<Socket | null>(null);
@@ -48,11 +48,21 @@ export function useWebRTC(): UseWebRTCReturn {
         // 다른 사용자가 스트리밍을 시작했을 때
         socketRef.current.on('streamer-started', (streamerId: string) => {
             console.log('스트리머 시작:', streamerId);
-            setCurrentStreamer(streamerId);
+
+            setStreamers(prev => {
+                // 최대 2명까지만 허용
+                if (prev.length >= 2) {
+                    console.log('최대 2명까지만 스트리밍 가능합니다');
+                    return prev;
+                }
+                if (!prev.includes(streamerId)) {
+                    return [...prev, streamerId];
+                }
+                return prev;
+            });
 
             // 내가 스트리머가 아니라면 스트리머에게 연결 요청
             if (streamerId !== socketRef.current?.id) {
-                setIsStreaming(false);
                 // 스트리머에게 연결 요청 (initiator=true로 offer 생성)
                 console.log('스트리머에게 연결 시도:', streamerId);
                 createPeer(streamerId, true);
@@ -60,13 +70,22 @@ export function useWebRTC(): UseWebRTCReturn {
         });
 
         // 스트리밍이 중지되었을 때
-        socketRef.current.on('streamer-stopped', () => {
-            console.log('스트리밍 중지됨');
-            setCurrentStreamer(null);
-            setRemoteStream(null);
-            // 모든 peer 연결 정리
-            peersRef.current.forEach((peer) => peer.destroy());
-            peersRef.current.clear();
+        socketRef.current.on('streamer-stopped', (streamerId: string) => {
+            console.log('스트리밍 중지됨:', streamerId);
+
+            setStreamers(prev => prev.filter(id => id !== streamerId));
+            setRemoteStreams(prev => {
+                const newMap = new Map(prev);
+                newMap.delete(streamerId);
+                return newMap;
+            });
+
+            // 해당 peer 연결 정리
+            const peer = peersRef.current.get(streamerId);
+            if (peer) {
+                peer.destroy();
+                peersRef.current.delete(streamerId);
+            }
         });
 
         // WebRTC Offer 수신
@@ -130,8 +149,12 @@ export function useWebRTC(): UseWebRTCReturn {
         });
 
         peer.on('stream', (stream) => {
-            console.log('원격 스트림 수신:', stream);
-            setRemoteStream(stream);
+            console.log('원격 스트림 수신:', userId, stream);
+            setRemoteStreams(prev => {
+                const newMap = new Map(prev);
+                newMap.set(userId, stream);
+                return newMap;
+            });
         });
 
         peer.on('error', (err) => {
@@ -190,9 +213,9 @@ export function useWebRTC(): UseWebRTCReturn {
 
     return {
         localStream,
-        remoteStream,
+        remoteStreams,
         isStreaming,
-        currentStreamer,
+        streamers,
         startStreaming,
         stopStreaming,
         error,

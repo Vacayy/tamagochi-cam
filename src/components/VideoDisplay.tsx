@@ -59,14 +59,14 @@ export default function VideoDisplay({ stream, isLocal = false }: VideoDisplayPr
         <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full h-full relative rounded-2xl overflow-hidden shadow-2xl"
+            className="w-full h-full relative rounded-2xl overflow-hidden shadow-2xl bg-gradient-to-br from-[hsl(220,20%,12%)] to-[hsl(220,20%,8%)]"
         >
             <video
                 ref={videoRef}
                 autoPlay
                 playsInline
                 muted={isLocal}
-                className="w-full h-full object-cover"
+                className="w-full h-full object-contain"
                 style={{ transform: 'scaleX(-1)' }}
             />
 

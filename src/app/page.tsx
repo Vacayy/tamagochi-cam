@@ -68,9 +68,6 @@ export default function LoginPage() {
             >
               Tamagochi Cam
             </motion.h1>
-            <p className="text-muted-foreground text-sm">
-              친구와 번갈아가며 Cam을 공유해보세요
-            </p>
           </div>
 
           {/* 폼 */}
@@ -80,14 +77,14 @@ export default function LoginPage() {
                 htmlFor="password"
                 className="block text-sm font-medium text-foreground/80 mb-2"
               >
-                비밀번호
+                Password
               </label>
               <input
                 id="password"
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                placeholder="비밀번호를 입력하세요"
+                placeholder="Enter password"
                 className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl focus:outline-none focus:ring-2 focus:ring-[hsl(var(--primary))] focus:border-transparent transition-all text-foreground placeholder:text-muted-foreground"
                 disabled={isLoading}
               />
