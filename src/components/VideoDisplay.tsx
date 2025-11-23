@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 
 interface VideoDisplayProps {
@@ -10,12 +10,23 @@ interface VideoDisplayProps {
 
 export default function VideoDisplay({ stream, isLocal = false }: VideoDisplayProps) {
     const videoRef = useRef<HTMLVideoElement>(null);
+    const [isMuted, setIsMuted] = useState(false);
 
     useEffect(() => {
         if (videoRef.current && stream) {
             videoRef.current.srcObject = stream;
         }
     }, [stream]);
+
+    const toggleMute = () => {
+        if (stream && isLocal) {
+            const audioTracks = stream.getAudioTracks();
+            audioTracks.forEach(track => {
+                track.enabled = !track.enabled;
+            });
+            setIsMuted(!isMuted);
+        }
+    };
 
     if (!stream) {
         return (
@@ -80,6 +91,54 @@ export default function VideoDisplay({ stream, isLocal = false }: VideoDisplayPr
                     <div className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
                     <span className="text-sm font-medium text-white">LIVE</span>
                 </motion.div>
+            )}
+
+            {/* 음소거 버튼 (로컬 스트림만) */}
+            {isLocal && stream && (
+                <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={toggleMute}
+                    className="absolute bottom-6 right-6 glass-effect p-3 rounded-full hover:bg-white/10 transition-all"
+                    whileHover={{ scale: 1.1 }}
+                    whileTap={{ scale: 0.9 }}
+                >
+                    {isMuted ? (
+                        <svg
+                            className="w-6 h-6 text-red-500"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                            />
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"
+                            />
+                        </svg>
+                    ) : (
+                        <svg
+                            className="w-6 h-6 text-white"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                        >
+                            <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"
+                            />
+                        </svg>
+                    )}
+                </motion.button>
             )}
         </motion.div>
     );

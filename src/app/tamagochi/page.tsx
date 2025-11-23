@@ -113,16 +113,6 @@ export default function TamagochiPage() {
                         disabled={streamers.length >= 2 && !isStreaming}
                     />
                 </motion.div>
-
-                {/* 인포 */}
-                <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: 0.3 }}
-                    className="text-center text-sm text-muted-foreground"
-                >
-                    <p>Maximum 2 people can stream simultaneously 📹</p>
-                </motion.div>
             </div>
         </div>
     );
