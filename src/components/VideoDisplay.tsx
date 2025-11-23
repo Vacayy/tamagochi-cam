@@ -67,6 +67,7 @@ export default function VideoDisplay({ stream, isLocal = false }: VideoDisplayPr
                 playsInline
                 muted={isLocal}
                 className="w-full h-full object-cover"
+                style={{ transform: 'scaleX(-1)' }}
             />
 
             {/* 라이브 인디케이터 */}

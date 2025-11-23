@@ -7,8 +7,8 @@ const inter = Inter({ subsets: ["latin"], variable: "--font-inter" });
 const caveat = Caveat({ subsets: ["latin"], variable: "--font-caveat" });
 
 export const metadata: Metadata = {
-  title: "Polaroid Studio",
-  description: "Capture and collect your moments.",
+  title: "Tamagochi Cam",
+  description: "Tamagochi Cam",
 };
 
 export default function RootLayout({

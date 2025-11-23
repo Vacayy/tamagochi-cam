@@ -52,8 +52,11 @@ export default function TamagochiPage() {
                     initial={{ opacity: 0, scale: 0.95 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.1 }}
+                    className="flex-1 flex items-center justify-center min-h-0"
                 >
-                    <VideoDisplay stream={displayStream} isLocal={isStreaming} />
+                    <div className="w-full max-w-5xl max-h-[70vh] aspect-video">
+                        <VideoDisplay stream={displayStream} isLocal={isStreaming} />
+                    </div>
                 </motion.div>
 
                 {/* 에러 메시지 */}
